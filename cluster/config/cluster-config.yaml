@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+data:
+  cluster-name: "macbook"
+kind: ConfigMap
+metadata:
+  name: cluster-info
+  namespace: default

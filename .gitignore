@@ -1,0 +1,6 @@
+**/*.key
+.DS_Store
+resources/.vault-init.json
+resources/wge-entitlement.yaml
+resources/github-secrets.sh
+
