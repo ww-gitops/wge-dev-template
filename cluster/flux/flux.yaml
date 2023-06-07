@@ -1,5 +1,42 @@
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: kyverno
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./cluster/addons/kyverno
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+# kind: Kustomization
+# metadata:
+#   name: kyverno-policies
+#   namespace: flux-system
+# spec:
+#   interval: 1m0s
+#   dependsOn:
+#     - name: kyverno
+#     - name: config
+#   path: ./cluster/kyverno-policies
+#   prune: true
+#   wait: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: flux-system
+#   postBuild:
+#     substitute:
+#       dnsSuffix: kubernetes.docker.internal
+#     substituteFrom:
+#       - kind: ConfigMap
+#         name: cluster-config
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: cert-manager
@@ -13,7 +50,7 @@ spec:
     kind: GitRepository
     name: flux-system
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: nginx
@@ -28,9 +65,9 @@ spec:
     name: flux-system
   postBuild:
     substitute:
-      hostName: kubernetes.docker.internal
+      dnsSuffix: kubernetes.docker.internal
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: reloader
@@ -44,7 +81,7 @@ spec:
     kind: GitRepository
     name: flux-system
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: cert-config
@@ -62,28 +99,28 @@ spec:
     name: flux-system
   postBuild:
     substitute:
-      hostName: kubernetes.docker.internal
+      dnsSuffix: kubernetes.docker.internal
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: vault
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: cert-config
   interval: 1m0s
   path: ./cluster/addons/vault
   prune: true
   wait: true
-  dependsOn:
-    - name: cert-config
   sourceRef:
     kind: GitRepository
     name: flux-system
   postBuild:
     substitute:
-      hostName: kubernetes.docker.internal
+      dnsSuffix: kubernetes.docker.internal
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: external-secrets
@@ -97,7 +134,7 @@ spec:
     kind: GitRepository
     name: flux-system
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: secrets
@@ -109,14 +146,15 @@ spec:
   wait: true
   dependsOn:
     - name: external-secrets
+    - name: cert-config
   sourceRef:
     kind: GitRepository
     name: flux-system
   postBuild:
     substitute:
-      hostName: kubernetes.docker.internal
+      dnsSuffix: kubernetes.docker.internal
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: dex
@@ -126,6 +164,7 @@ spec:
   dependsOn:
     - name: vault
     - name: secrets
+    - name: config
   path: ./cluster/addons/dex
   prune: true
   wait: true
@@ -133,26 +172,27 @@ spec:
     kind: GitRepository
     name: flux-system
   postBuild:
-    substitute:
-      hostName: kubernetes.docker.internal
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: config
   namespace: flux-system
 spec:
   interval: 1m0s
+  dependsOn:
+    - name: vault
   path: ./cluster/config
   prune: true
   wait: true
-  dependsOn:
-    - name: secrets
   sourceRef:
     kind: GitRepository
     name: flux-system
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: tf-controller
@@ -160,15 +200,21 @@ metadata:
 spec:
   interval: 1m0s
   dependsOn:
-    - name: vault
+    - name: secrets
   path: ./cluster/addons/tf-controller
   prune: true
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
+  postBuild:
+    substitute:
+      dnsSuffix: kubernetes.docker.internal
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: wge
@@ -184,10 +230,11 @@ spec:
     kind: GitRepository
     name: flux-system
   postBuild:
-    substitute:
-      hostName: kubernetes.docker.internal
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
   name: prom-graf
@@ -195,7 +242,7 @@ metadata:
 spec:
   interval: 1m0s
   dependsOn:
-    - name: nginx
+    - name: secrets
   path: ./cluster/addons/prom-graf
   prune: true
   wait: true
@@ -203,37 +250,66 @@ spec:
     kind: GitRepository
     name: flux-system
   postBuild:
-    substitute:
-      hostName: kubernetes.docker.internal
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
-  name: wge-templates
+  name: wge-rbac
   namespace: flux-system
 spec:
   interval: 1m0s
   dependsOn:
     - name: wge
-  path: ./cluster/wge-templates
+  path: ./cluster/bases/rbac
   prune: true
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
-  name: wge-bases
+  name: flux-tf
   namespace: flux-system
 spec:
   interval: 1m0s
   dependsOn:
     - name: wge
-  path: ./cluster/bases
+  path: ./cluster/bases/flux
   prune: true
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: namespaces
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  dependsOn:
+    - name: flux-tf
+  path: ./cluster/namespaces
+  prune: true
+  #wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config

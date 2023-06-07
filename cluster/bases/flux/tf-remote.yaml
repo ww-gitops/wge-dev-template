@@ -1,0 +1,73 @@
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: aws-s3-bucket
+  namespace: flux-system
+  labels:
+    tf.weave.works/composite: s3-bucket
+spec:
+  path: aws_s3_bucket
+  values:
+    bucket: ${prefixName}-${awsAccountId}-${awsRegion}-tf-state
+    tags:
+      creator: ${awsTagCreator}
+      customer: ${awsTagCustomer}
+      projectGid: ${awsTagProjectGid}
+      Name: state-bucket
+  sourceRef:
+    kind: OCIRepository
+    name: aws-package
+  approvePlan: auto
+  retryInterval: 10s
+  interval: 2m
+  destroyResourcesOnDeletion: true
+  writeOutputsToSecret:
+    name: aws-s3-bucket-outputs
+    outputs:
+    - arn
+    - bucket
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: aws-dynamo-table
+  namespace: flux-system
+  labels:
+    tf.weave.works/composite: dynamodb-table
+spec:
+  path: aws_dynamodb_table
+  values:
+    name: ${prefixName}-${awsAccountId}-${awsRegion}-tf-state
+    attribute:
+    - name: LockID
+      type: S
+    hash_key: LockID
+    read_capacity: 5
+    write_capacity: 5
+    tags:
+      creator: ${awsTagCreator}
+      customer: ${awsTagCustomer}
+      projectGid: ${awsTagProjectGid}
+      Name: state-bucket
+  sourceRef:
+    kind: OCIRepository
+    name: aws-package
+  approvePlan: auto
+  retryInterval: 10s
+  interval: 2m
+  destroyResourcesOnDeletion: true
+  writeOutputsToSecret:
+    name: aws-dymamo-table-outputs
+    outputs:
+    - arn
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds

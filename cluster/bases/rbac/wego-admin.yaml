@@ -40,3 +40,6 @@ rules:
   - apiGroups: ["infra.contrib.fluxcd.io"]
     resources: ["*"]
     verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["templates.weave.works"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "patch"]

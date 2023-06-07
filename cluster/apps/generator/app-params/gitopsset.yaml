@@ -1,0 +1,68 @@
+apiVersion: templates.weave.works/v1alpha1
+kind: GitOpsSet
+metadata:
+  labels:
+    app.kubernetes.io/name: gitopsset
+    app.kubernetes.io/instance: gitopsset-sample
+    app.kubernetes.io/part-of: gitopssets-controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: gitopssets-controller
+  name: ${resourceName}-apps
+  namespace: ${templateNamespace}
+spec:
+  serviceAccountName: gitopssets
+  generators:
+    - gitRepository:
+        repositoryRef: flux-system
+        files:
+          - path: resource-descriptions/${templateNamespace}/${resourceName}.yaml
+  templates:
+    - repeat: '{ .clusters.apps[?(@.Element.name==${clusterName})] }'
+      content:
+        apiVersion: templates.weave.works/v1alpha1
+        kind: GitOpsSet
+        metadata:
+          labels:
+            app.kubernetes.io/name: gitopsset
+            app.kubernetes.io/instance: gitopsset-sample
+            app.kubernetes.io/part-of: gitopssets-controller
+            app.kubernetes.io/managed-by: kustomize
+            app.kubernetes.io/created-by: gitopssets-controller
+          name: ${resourceName}-apps
+          namespace: ${templateNamespace}
+        spec:
+          serviceAccountName: gitopssets
+          generators:
+            - gitRepository:
+                repositoryRef: flux-system
+                files:
+                  - path: resource-descriptions/${templateNamespace}/${resourceName}.yaml
+          templates:
+            - repeat: '{ .clusters.apps[?(@.Element.name==${clusterName})] }'
+              content:
+                kind: Kustomization
+                apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+                metadata:
+                  name: '${resourceName}-cluster-{{ .Element.name }}-app-{{ .Repeat.name }}'
+                  annotations:
+                    templates.weave.works/create-request: ''
+                spec:
+                  interval: 1m0s
+                  sourceRef:
+                    kind: GitRepository
+                    name: flux-system
+                    namespace: flux-system
+                  path: ./cluster/apps/template/local-folder
+                  prune: true
+                  wait: true
+                  timeout: 5m
+                  postBuild:
+                    substituteFrom:
+                      - kind: ConfigMap
+                        name: cluster-config
+                    substitute:
+                      templateNamespace: '${templateNamespace}'
+                      resourceName: '${resourceName}'
+                      clusterName: '{{ or .Element.resource "${resourceName}" }}-{{ .Element.name }}'
+                      appName: '{{ .Repeat.name }}'
+                      appVersion: '{{or .Repeat.version "" }}'

@@ -1,0 +1,43 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: set-host-alias
+spec:
+  rules:
+    - name: set-host-alias
+      match:
+        any:
+        # AND across kinds and namespaceSelector
+        - resources:
+            # OR inside list of kinds
+            kinds:
+            - Pod
+            selector:
+              matchLabels:
+                app.kubernetes.io/created-by: tf-controller
+      mutate:
+        patchesJson6902: |-
+          - op: add
+            path: /spec/hostAliases
+            value:
+              - ip: ${clusterIP}
+                hostnames:
+                - "dex.${dnsSuffix}"
+                - "wge.${dnsSuffix}"
+                - "vault.${dnsSuffix}"
+
+          - op: add
+            path: /spec/volumes/-
+            value:
+              name: local-ca
+              configMap:
+                name: local-ca
+
+          - op: add
+            path: /spec/containers/0/volumeMounts/-
+            value:
+              name: local-ca
+              mountPath: /etc/ssl/certs/local-ca.pem
+              subPath: CA.cer
+              readOnly: false
+   

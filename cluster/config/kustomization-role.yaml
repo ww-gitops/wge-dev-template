@@ -27,5 +27,5 @@ roleRef:
   name: gitopssets-role
 subjects:
 - kind: ServiceAccount
-  name: gitopssets-controller-manager
-  namespace: gitopssets-system
+  name: gitopssets
+  namespace: flux-system

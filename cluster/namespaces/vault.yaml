@@ -2,17 +2,16 @@
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
-  name: vault-leaf-secrets
+  name: vault
   namespace: ${nameSpace}
 spec:
   provider:
     vault:
-      server: https://vault.${hostName}
+      server: http://vault.vault.svc.cluster.local:8200 # https://vault.${hostName} 
       path: ${nameSpace}
       version: v2
       auth:
-        kubernetes:
-          mountPath: weaveworks
-          role: external-secrets-vault
-          serviceAccountRef:
-            name: vault-secrets-sa
+        tokenSecretRef:
+          name: "vault-token"
+          namespace: "vault"
+          key: "vault-token"

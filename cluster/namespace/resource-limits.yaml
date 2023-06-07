@@ -1,0 +1,27 @@
+# apiVersion: "v1"
+# kind: "LimitRange"
+# metadata:
+#   name: "resource-limits"
+#   namespace: ${nameSpace}
+# spec:
+#   limits:
+#     - type: "Pod"
+#       max:
+#         cpu: ${podLimitsMaxCpu}
+#         memory: ${podLimitsMaxMemory}
+#       min:
+#         cpu: ${podLimitsMinCpu}
+#         memory: ${podLimitsMinMemory}
+#     - type: "Container"
+#       max:
+#         cpu: ${containerMaxCpu}
+#         memory: ${containerMaxMemory}
+#       min:
+#         cpu: ${containerMinCpu}
+#         memory: ${containerMinMemory}
+#       default:
+#         cpu: ${containerDefaultCpu}
+#         memory: ${containerDefaultMemory}
+#       defaultRequest:
+#         cpu: ${containerDefaultReqCpu}
+#         memory: ${containerDefaultReqMemory}

@@ -39,4 +39,10 @@ pushd $SCRIPT_DIR/.. >/dev/null
 source .envrc
 
 export VAULT_ADDR="https://vault.kubernetes.docker.internal"
-vault operator init -format=json > resources/.vault-init.json
+
+if [ "$(vault status --format=json | jq -r '.initialized')" == "true" ]; then
+  echo "Vault already initialized"
+  exit 0
+fi
+
+vault operator init -tls-skip-verify -format=json > resources/.vault-init.json

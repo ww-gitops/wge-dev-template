@@ -1,4 +1,4 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: weave-gitops-enterprise-charts
@@ -32,6 +32,7 @@ spec:
   interval: 1m0s
   timeout: 5m
   values:
+    enableExplorer: true
     ingress:
       enabled: true
       annotations:
@@ -40,9 +41,9 @@ spec:
       tls:
         - secretName: wge-tls
           hosts:
-            - wge.${hostName}
+            - wge.${dnsSuffix}
       hosts:
-        - host: wge.${hostName}
+        - host: wge.${dnsSuffix}
           paths:
           - path: /?(.*)
             pathType: ImplementationSpecific
@@ -51,11 +52,11 @@ spec:
         type: github
         hostname: github.com
       capi:
-        repositoryURL: https://github.com/paulcarlton-ww/macbook
+        repositoryURL: https://github.com/${GitHubOrg}/${GitHubRepo}
       oidc:
         enabled: true
-        issuerURL: https://dex.${hostName}
-        redirectURL: https://wge.${hostName}/oauth2/callback
+        issuerURL: https://dex.${dnsSuffix}
+        redirectURL: https://wge.${dnsSuffix}/oauth2/callback
         clientCredentialsSecret: wge-oidc-auth
     policy-agent:
       enabled: true
@@ -70,5 +71,36 @@ spec:
     enableTerraformUI: true
     global:
       capiEnabled: false
+  postRenderers:
+    - kustomize:
+        patches:
+        - target:
+            kind: Deployment
+            name: weave-gitops-enterprise-mccp-cluster-service
+          patch: |-
+            - op: add
+              path: /spec/template/spec/hostAliases
+              value:
+                - ip: ${clusterIP}
+                  hostnames:
+                  - "dex.${dnsSuffix}"
+                  - "wge.${dnsSuffix}"
 
-  
+            - op: add
+              path: /spec/template/spec/volumes/-
+              value:
+                name: local-ca
+                configMap:
+                  name: local-ca
+
+            - op: add
+              path: /spec/template/spec/containers/0/volumeMounts/-
+              value:
+                name: local-ca
+                mountPath: /etc/ssl/certs/local-ca.pem
+                subPath: CA.cer
+                readOnly: false
+        images:
+          - name: ghcr.io/weaveworks/gitopssets-controller
+            newName: pcarlton/gitopssets-controller
+            newTag: 1.0.0

@@ -1,0 +1,48 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: eks-${resourceName}-${clusterName}
+  namespace: ${templateNamespace}
+spec:
+  interval: 10m
+  retryInterval: 20s
+  path: ./terraform/cluster-templates/eks-create
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  writeOutputsToSecret:
+    name: '${resourceName}-${clusterName}-eks-config'
+  dependsOn:
+    - name: 'vpc-${vpcResource}-${vpcName}'
+  backendConfig:
+    customConfiguration: |
+      backend "s3" {
+        key            = "${mgmtClusterName}/${templateNamespace}/eks/${resourceName}-${clusterName}/terraform.tfstate"
+        bucket         = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+        region         = "${awsRegion}"
+        encrypt        = true
+        dynamodb_table = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+      }
+  vars:
+    - name: cluster_name
+      value: ${resourceName}-${clusterName}
+    - name: eks_version
+      value: ${clusterVersion}
+    - name: region
+      value: ${awsRegion}
+  varsFrom:
+    - kind: Secret
+      name: ${vpcResource}-${vpcName}-vpc-config
+      varsKeys:
+        - vpc_id
+        - private_subnets_string
+        - public_subnets_string
+        - vpc_cidr
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds

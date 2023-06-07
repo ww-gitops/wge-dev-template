@@ -1,0 +1,19 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: ${appName}
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./cluster/apps/${appName}
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  postBuild:
+    substitute:
+      templateNamespace: ${templateNamespace}
+      resourceName: ${resourceName}
+      clusterName: ${clusterName}
+      appName: ${appName}
+      appVersion: ${appVersion}

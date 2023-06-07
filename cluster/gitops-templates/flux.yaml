@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: ${nameSpace}-gitops
+  namespace: flux-system
+  labels:
+    alert: "commit-status"
+spec:
+  interval: 1m0s
+  dependsOn:
+    - name: namespace-${nameSpace}
+  path: ./clusters/management/clusters/${nameSpace}
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

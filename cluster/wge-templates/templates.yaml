@@ -1,17 +1,67 @@
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
+apiVersion: templates.weave.works/v1alpha2
+kind: GitOpsTemplate
 metadata:
-  name: templates
-  namespace: flux-system
+  name: app-demo
+  namespace: default
+  labels:
+    weave.works/template-type: terraform
+  annotations:
+    templates.weave.works/profiles-enabled: "true"
+    templates.weave.works/kustomizations-enabled: "true"
+    templates.weave.works/credentials-enabled: "true"
+    templates.weave.works/delimiters: "((,))"
 spec:
-  dependsOn:
-    - name: apps
-  interval: 10m0s
-  retryInterval: 1m0s
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  path: /templates
-  prune: true
-  wait: false
+  description: Template for deploying applications from application description in yaml file.
+  renderType: templating
+  params:
+    - name: RESOURCE_NAME
+      description: Name of the resource.
+
+  resourcetemplates:
+    - path: clusters/management/clusters/(( .template.meta.namespace ))/(( .params.RESOURCE_NAME )).yaml
+      content:
+        - apiVersion: templates.weave.works/v1alpha1
+          kind: GitOpsSet
+          metadata:
+            labels:
+              app.kubernetes.io/name: gitopsset
+              app.kubernetes.io/instance: gitopsset-sample
+              app.kubernetes.io/part-of: gitopssets-controller
+              app.kubernetes.io/managed-by: kustomize
+              app.kubernetes.io/created-by: gitopssets-controller
+            name: (( .params.RESOURCE_NAME ))-kustomization
+          spec:
+            ServiceAccountName: (( .template.meta.namespace ))
+            generators:
+              - gitRepository:
+                  repositoryRef: flux-system
+                  files:
+                    - path: applications/(( .template.meta.namespace ))/(( .params.RESOURCE_NAME )).yaml
+            templates:
+              - repeat: "{ .vpcs }"
+                content:
+                  kind: Kustomization
+                  apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+                  metadata:
+                    name: '(( .params.RESOURCE_NAME ))-app-{{ .Repeat.name }}'
+                    annotations:
+                      templates.weave.works/create-request: ''
+                  spec:
+                    interval: 1m0s
+                    sourceRef:
+                      kind: GitRepository
+                      name: flux-system
+                      namespace: flux-system
+                    path: ./applications/templates/kustomization
+                    prune: true
+                    wait: true
+                    timeout: 10m
+                    
+                    postBuild:
+                      substitute:
+                        templateNamespace: '(( .template.meta.namespace ))'
+                        resourceName: '(( .params.RESOURCE_NAME ))'
+                        appName: '{{ .Repeat.name }}'
+                      substituteFrom:
+                        - kind: ConfigMap
+                          name: cluster-config

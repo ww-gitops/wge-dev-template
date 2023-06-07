@@ -1,0 +1,56 @@
+wge:
+  gui: false
+
+template: 
+  name: dynamic-v1
+  namespace: test-two
+aws:
+  region: eu-west-1
+
+vpcs:
+  - name: v1
+
+    # set to 'discover' for using existing vpc not created by this template
+    mode: create
+
+    # Following field only required if mode is create 
+    cidr: 10.0.0.0/16
+    publicsubnets: 3
+    privatesubnets: 3
+
+clusters:
+    
+  - name: c1
+    # set to the resource name of the eks cluster if using an existing eks cluster created by this template
+    # eks_resource: <resource name> 
+
+    # set to 'discover' for using existing eks cluster not created by this template
+    mode: create
+
+    # If mode is 'discover' use the following fields - Not yet supported
+    gui: true # set to false to skip adding it to the GUI
+    flux: true # set to false to skip adding it to flux
+
+    # Following field only required if mode is create 
+    
+    # set to the resource name of the vpc if using an existing vpc created by this template
+    # vpc_resource: <resource name> 
+    vpc_name: v1
+
+    version: 1.26
+
+    apps:
+      - name: podinfo-ms1
+        mode: local-folders
+        path: ./kustomize
+      - name: podinfo-ms2
+        mode: apps-repos
+        version: v6.3.5
+      - name: podinfo-ms3
+        mode: apps-repos
+        ref:
+          type: tag
+          value: v6.3.6
+      - name: podinfo-ms4
+        mode: app-params
+        params: ./cluster/apps/params/podinfo-ms4.yaml

@@ -1,0 +1,94 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: 'eks-config-${resourceName}-${clusterName}'
+  namespace: ${templateNamespace}
+spec:
+  interval: 10m
+  dependsOn:
+    - name: 'eks-${resourceName}-${clusterName}'
+  retryInterval: 20s
+  path: ./terraform/cluster-templates/eks-config
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  writeOutputsToSecret:
+    name: '${resourceName}-${clusterName}-cluster-config'
+  backendConfig:
+    customConfiguration: |
+      backend "s3" {
+        key            = "${mgmtClusterName}/${templateNamespace}/eks-config/${resourceName}/${clusterName}/terraform.tfstate"
+        bucket         = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+        region         = "${awsRegion}"
+        encrypt        = true
+        dynamodb_table = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+      }
+  vars:
+    - name: tags
+      value:
+        customer: ${awsTagCustomer}
+        projectGid: ${awsTagProjectGid}
+        creator: ${awsTagCreator}
+    - name: cluster_name
+      value: ${resourceName}-${clusterName}
+    - name: region
+      value: ${awsRegion}
+    - name: target_path
+      value: 'clusters/${templateNamespace}/${resourceName}/${clusterName}'
+    - name: desired_size
+      value: ${desired_size}
+    # - name: min_size
+    #   value: '${minSize}'
+    # - name: max_size
+    #   value: '${maxSize}'
+    # - name: capacity_type
+    #   value: '${capacityType}'
+    # - name: instance_type
+    #   value: '${instanceType}'
+    # - name: shrink
+    #   value: '{{ .params.SHRINK }}'
+    - name: eks_core_state_bucket
+      value: '${prefixName}-${awsAccountId}-${awsRegion}-tf-state'
+    - name: eks_core_state_key
+      value: '${mgmtClusterName}/${templateNamespace}/eks/${resourceName}-${clusterName}/terraform.tfstate'
+  varsFrom:
+    - kind: ConfigMap
+      name: leaf-cluster-config
+      varsKeys:
+        - git_commit_author
+        - git_commit_email
+        - github_owner
+        - github_org
+        - repository_name
+        - cluster_admin_users_string
+    - kind: Secret
+      name: github-leaf-token
+      varsKeys:
+        - github_token
+    - kind: Secret
+      name: vault-token
+    - kind: ConfigMap
+      name: cluster-config
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds
+      volumeMounts:
+      - mountPath: /etc/ssl/certs/local-ca.pem
+        name: local-ca
+        subPath: CA.cer
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: local-ca
+        name: local-ca
+      hostAliases:
+      - ip: ${clusterIP}
+        hostnames:
+        - dex.${dnsSuffix}
+        - wge.${dnsSuffix}
+        - vault.${dnsSuffix} 

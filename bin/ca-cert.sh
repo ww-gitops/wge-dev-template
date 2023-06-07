@@ -40,30 +40,9 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR/.. >/dev/null
 source .envrc
 
-mkdir -p certs
-pushd ${top_level}/certs >/dev/null
+pushd ${top_level}/resources >/dev/null
 
 openssl genrsa -out CA.key 4096
 openssl req -x509 -new -nodes -key CA.key -subj "/CN=paulc" -days 3650 -reqexts v3_req -extensions v3_ca -out CA.cer
-# openssl req -x509 -new -nodes -key CA.key -sha256 -days 3650 -reqexts v3_req -extensions v3_ca -out CA.cer <<EOF
-# GB
-# Wiltshire
-# Salisbury
-# Weaveworks
-# CX
-# paulc-macbook
-# paul.carlton@weave.works
-# EOF
-
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ca-key-pair
-  namespace: cert-manager
-data:
-  tls.crt: $(base64 -i CA.cer)
-  tls.key: $(base64 -i CA.key)
-EOF
 
 popd >/dev/null

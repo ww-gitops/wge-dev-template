@@ -1,0 +1,10 @@
+apiVersion: gitops.weave.works/v1alpha1
+kind: GitopsCluster
+metadata:
+  annotations:
+    templates.weave.works/create-request: ""
+  name: ${resourceName}-${clusterName}
+  namespace: flux-system
+spec:
+  secretRef:
+    name: ${resourceName}-${clusterName}-kubeconfig

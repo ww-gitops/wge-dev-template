@@ -52,6 +52,35 @@ spec:
         tls:
           - secretName: vault-tls
             hosts:
-              - vault.${hostName}
+              - vault.${dnsSuffix}
         hosts:
-          - host: vault.${hostName}
+          - host: vault.${dnsSuffix}
+  postRenderers:
+    - kustomize:
+        patches:
+        - target:
+            kind: Pod
+            name: vault-0
+          patch: |-
+            - op: add
+              path: /spec/hostAliases
+              value:
+                - ip: ${clusterIP}
+                  hostnames:
+                  - "dex.${dnsSuffix}"
+                  - "vault.${dnsSuffix}"
+
+            - op: add
+              path: /spec/volumes/-
+              value:
+                name: local-ca
+                configMap:
+                  name: local-ca
+
+            - op: add
+              path: /spec/containers/0/volumeMounts/-
+              value:
+                name: local-ca
+                mountPath: /etc/ssl/certs/local-ca.pem
+                subPath: CA.cer
+                readOnly: false

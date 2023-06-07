@@ -8,7 +8,7 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] " >&2
+    echo "usage ${0} [--debug]" >&2
     echo "This script will initialize vault" >&2
 }
 
@@ -40,9 +40,15 @@ pushd $SCRIPT_DIR/.. >/dev/null
 source .envrc
 
 export VAULT_ADDR="https://vault.kubernetes.docker.internal"
-key1=$(jq -r '.recovery_keys_b64[0]' resources/.vault-init.json)
-key2=$(jq -r '.recovery_keys_b64[1]' resources/.vault-init.json)
-key3=$(jq -r '.recovery_keys_b64[2]' resources/.vault-init.json)
+
+if [ "$(vault status --format=json | jq -r '.sealed')" == "false" ]; then
+  echo "Vault already unsealed"
+  exit 0
+fi
+
+key1=$(jq -r '.unseal_keys_b64[0]' resources/.vault-init.json)
+key2=$(jq -r '.unseal_keys_b64[1]' resources/.vault-init.json)
+key3=$(jq -r '.unseal_keys_b64[2]' resources/.vault-init.json)
 
 kubectl -n vault exec --stdin=true --tty=true vault-0 -- vault operator unseal $key1
 kubectl -n vault exec --stdin=true --tty=true vault-0 -- vault operator unseal $key2

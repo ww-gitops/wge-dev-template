@@ -1,0 +1,36 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: '${resourceName}-vpc-${vpcName}'
+  namespace: ${templateNamespace}
+spec:
+  interval: 10m
+  retryInterval: 20s
+  path: ./terraform/cluster-templates/vpc-discover
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  writeOutputsToSecret:
+    name: '${resourceName}-${vpcName}-vpc-config'
+  backendConfig:
+    customConfiguration: |
+      backend "s3" {
+        key            = "${mgmtClusterName}/${templateNamespace}/${resourceName}/vpc/${vpcName}/terraform.tfstate"
+        bucket         = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+        region         = "${awsRegion}"
+        encrypt        = true
+        dynamodb_table = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+      }
+  vars:
+    - name: vpc_name
+      value: ${vpcName}
+    - name: region
+      value: ${awsRegion}
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds

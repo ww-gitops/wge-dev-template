@@ -1,0 +1,24 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: '${resourceName}-cluster-apps-params'
+  annotations:
+    templates.weave.works/create-request: ''
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  path: ./cluster/apps/generator/app-params
+  prune: true
+  wait: true
+  timeout: 5m
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
+    substitute:
+      templateNamespace: '${templateNamespace}'
+      resourceName: '${resourceName}'
+      params: '${paramsFile}'

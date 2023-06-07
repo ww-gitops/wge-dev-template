@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: leaf-cluster-config
+  namespace: ${nameSpace}
+data:
+  cluster_admin_users_string: ${userEmail}
+  cluster_admin_roles_string: AdministratorAccess
+  git_commit_author: ${commitUser}
+  git_commit_email: ${userEmail}
+  github_known_hosts: gitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY=
+  github_owner: ${GitHubOrg}
+  repository_name: ${GitHubRepo}

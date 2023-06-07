@@ -1,4 +1,4 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta1
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
   name: prometheus-community
@@ -84,10 +84,10 @@ spec:
         tls:
         - secretName: alertmanager-tls
           hosts:
-          - alertmanager.${hostName}
+          - alertmanager.${dnsSuffix}
 
         hosts:
-        - alertmanager.${hostName}
+        - alertmanager.${dnsSuffix}
 
         paths:
         - /?(.*)
@@ -106,16 +106,16 @@ spec:
         tls:
         - secretName: prometheus-tls
           hosts:
-          - prometheus.${hostName}
+          - prometheus.${dnsSuffix}
 
         hosts:
-        - prometheus.${hostName}
+        - prometheus.${dnsSuffix}
 
         paths:
         - /?(.*)
 
       prometheusSpec:
-        externalUrl: 'https://prometheus.${hostName}/'
+        externalUrl: 'https://prometheus.${dnsSuffix}/'
         # routePrefix: '/prometheus'
         retention: 24h
         resources:
@@ -156,7 +156,7 @@ spec:
     grafana:
       grafana.ini:
         server:
-          root_url: "https://grafana.${hostName}/grafana"
+          root_url: "https://grafana.${dnsSuffix}/grafana"
           serve_from_sub_path: true
       adminPassword: Password123!
       ingress:
@@ -168,10 +168,10 @@ spec:
         tls:
         - secretName: grafana-tls
           hosts:
-            - grafana.${hostName}
+            - grafana.${dnsSuffix}
 
         hosts:
-        - grafana.${hostName}
+        - grafana.${dnsSuffix}
         paths:
         - /?(.*)
 

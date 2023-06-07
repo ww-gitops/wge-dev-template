@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: tf-controller
-      version: 0.10.1
+      version: 0.15.0-rc.4
       sourceRef:
         kind: HelmRepository
         name: tf-controller
@@ -23,11 +23,15 @@ spec:
   interval: 1m0s
   timeout: 5m
   values:
+    image:
+      # repository: pcarlton/tf-controller
+      tag: "v0.15.0-rc.4"
     runner:
       image:
-        tag: "v0.14.1"
-      serviceAccount:
-        annotations:
-          eks.amazonaws.com/role-arn: ${tfRunnerRoleArn}
+        # repository: pcarlton/tf-runner
+        tag: "v0.15.0-rc.4"
+      # serviceAccount:
+      #   annotations:
+      #     eks.amazonaws.com/role-arn: ${tfRunnerRoleArn}
       grpc:
         maxMessageSize: 30

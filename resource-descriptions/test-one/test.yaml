@@ -1,0 +1,50 @@
+wge:
+  gui: false
+
+template: 
+  name: dynamic-v1
+  namespace: test-one
+aws:
+  region: eu-west-1
+
+vpcs:
+    # if mode is 'discover' name can be the vpc id or vpc name if it has one
+  - name: v1
+    # If mode is 'use' provide the resource name of the existing vpc as well as name
+    # resource: ""
+    # set to 'use' to use existing vpc previously created by this template or 'discover' for using existing vpc
+    mode: create
+    # Following field only required if mode is create 
+    cidr: 10.0.0.0/16
+    publicsubnets: 3
+    privatesubnets: 3
+
+clusters:
+    # if mode is 'discover' name should be the EKS cluster name
+  - name: c1
+    # If mode is 'use' provide the resource name of the existing cluster as well as name
+    # resource: ""
+    # set to 'use' to use existing cluster previously created by this template or 'discover' for using existing cluster
+    mode: create
+    gui: true # set to false to skip adding it to the GUI
+    vpc_name: v1
+    # if using an existing vpc created by a previous template, provide resource name of vpc as well as name
+    # vpc_resource: ""
+    # Following field only required if mode is create 
+    version: 1.26
+
+    apps:
+      - name: podinfo-ms1
+        mode: local-folders
+        path: ./kustomize
+      - name: podinfo-ms2
+        mode: apps-repos
+        version: v6.3.5
+      - name: podinfo-ms3
+        mode: apps-repos
+        ref:
+          type: tag
+          value: v6.3.6
+      - name: podinfo-ms4
+        mode: app-params
+        params: ./cluster/apps/params/podinfo-ms4.yaml
