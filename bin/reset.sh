@@ -40,7 +40,10 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR/.. >/dev/null
 source .envrc
 
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+export AWS_ACCOUNT_ID="none"
+if [ "$aws" == "true" ]; then
+  export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+fi
 
 for ns in $(kubectl get ns -o custom-columns=":metadata.name"); do
   for k in $(kubectl get kustomizations.kustomize.toolkit.fluxcd.io -n $ns -o custom-columns=":metadata.name"); do
@@ -74,23 +77,25 @@ if [ $delete_tfs -eq 1 ]; then
 fi
 
 cluster_name=$(kubectl get cm -n flux-system cluster-config -o jsonpath='{.data.mgmtClusterName}')
-set +e
-aws s3 ls | grep -E "${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state$" > /dev/null 2>&1
-present=$?
-set -e
-if [ $present -eq 0 ]; then
-  aws s3 rm s3://${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state/$cluster_name --recursive
-  aws s3api delete-bucket --bucket ${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state
-fi
 
-set +e
-aws dynamodb  list-tables | jq -r '.TableNames[]' | grep -E "^${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state$" > /dev/null 2>&1
-present=$?
-set -e
-if [ $present -eq 0 ]; then
-  aws dynamodb delete-table --table-name ${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state
+if [ "$aws" == "true" ]; then
+  set +e
+  aws s3 ls | grep -E "${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state$" > /dev/null 2>&1
+  present=$?
+  set -e
+  if [ $present -eq 0 ]; then
+    aws s3 rm s3://${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state/$cluster_name --recursive
+    aws s3api delete-bucket --bucket ${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state
+  fi
+
+  set +e
+  aws dynamodb  list-tables | jq -r '.TableNames[]' | grep -E "^${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state$" > /dev/null 2>&1
+  present=$?
+  set -e
+  if [ $present -eq 0 ]; then
+    aws dynamodb delete-table --table-name ${PREFIX_NAME}-ac-${AWS_ACCOUNT_ID}-${AWS_REGION}-tf-state
+  fi
 fi
-  
 
 
 rm -rf cluster/flux/flux-system

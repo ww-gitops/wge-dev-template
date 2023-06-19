@@ -1,0 +1,48 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: kind-${hostname}-${cluster_name}-gitops-kubeconfig
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./leaf-clusters/wge/kubeconfig
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
+    substitute:
+      clusterName: ${cluster_name}
+      resourceName: kind-${hostname}
+      secret_name: kind-${hostname}-${cluster_name}
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 1m
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  annotations:
+    templates.weave.works/create-request: ""
+  name: kind-${hostname}-${cluster_name}-gitops-cluster
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: kind-${hostname}-${cluster_name}-gitops-kubeconfig
+  interval: 1m0s
+  path: ./leaf-clusters/wge/gitops-cluster
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-config
+    substitute:
+      clusterName: ${cluster_name}
+      resourceName: kind-${hostname}
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 1m

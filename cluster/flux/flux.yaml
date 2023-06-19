@@ -277,7 +277,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
 kind: Kustomization
 metadata:
-  name: flux-tf
+  name: flux
   namespace: flux-system
 spec:
   interval: 1m0s
@@ -302,7 +302,7 @@ metadata:
 spec:
   interval: 1m0s
   dependsOn:
-    - name: flux-tf
+    - name: wge
   path: ./cluster/namespaces
   prune: true
   #wait: true

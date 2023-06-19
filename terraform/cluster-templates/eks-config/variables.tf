@@ -146,3 +146,15 @@ variable "vault_token" {
   description = "management cluster vault token"
   default     = ""
 }
+
+variable "resource_name" {
+  type        = string
+  description = "template resource name"
+  default     = ""
+}
+
+variable "template_namespace" {
+  type        = string
+  description = "template namespace"
+  default     = ""
+}

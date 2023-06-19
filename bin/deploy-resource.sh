@@ -73,7 +73,7 @@ pushd $SCRIPT_DIR/.. >/dev/null
 source .envrc
 
 export nameSpace=$namespace
-cat cluster/namespace/$template_name.yaml | envsubst > /tmp/$template_name.yaml
+cat cluster/templates/$template_name.yaml | envsubst > /tmp/$template_name.yaml
 gitops create template /tmp/$template_name.yaml --values RESOURCE_NAME=$resource_name AWS_REGION=$AWS_REGION --output-dir .
 git add clusters/management/clusters/$namespace/$resource_name.yaml
 

@@ -1,0 +1,117 @@
+apiVersion: templates.weave.works/v1alpha2
+kind: GitOpsTemplate
+metadata:
+  name: aws-eks-dev
+  namespace: default
+  annotations:
+    templates.weave.works/profiles-enabled: "false"
+    templates.weave.works/kustomizations-enabled: "false"
+    templates.weave.works/credentials-enabled: "true"
+    templates.weave.works/add-common-bases: "false"
+    templates.weave.works/inject-prune-annotation: "true"
+    templates.weave.works/delimiters: "((,))"
+  labels:
+    weave.works/template-type: cluster
+spec:
+  description: AWS EKS Development Cluster 
+  renderType: templating
+  params:
+    - name: CLUSTER_NAME
+      description: The name for this cluster.
+    - name: AWS_REGION
+      description: AWS Region to create cluster
+      options: ['us-east-1','eu-central-1','eu-west-1','eu-west-2','us-west-2']
+      default: "eu-west-1"
+    - name: KUBERNETES_VERSION
+      description: EKS Kubernetes version to use
+      options: ['v1.23', 'v1.24', 'v1.25', 'v1.26', 'v1.27']
+      default: "v1.27"
+    - name: WORKER_MACHINE_COUNT
+      description: Number of worker nodes to create.
+      options: ['1','2','3']
+      default: "2"
+  resourcetemplates:
+    - content:
+        - apiVersion: gitops.weave.works/v1alpha1
+          kind: GitopsCluster
+          metadata:
+            name: "(( .params.CLUSTER_NAME ))"
+            namespace: default
+            labels:
+              weave.works/capi: bootstrap
+          spec:
+            capiClusterRef:
+              name: "(( .params.CLUSTER_NAME ))"
+
+
+        - apiVersion: cluster.x-k8s.io/v1beta1
+          kind: Cluster
+          metadata:
+            name: (( .params.CLUSTER_NAME ))
+            namespace: default
+          spec:
+            clusterNetwork:
+              pods:
+                cidrBlocks:
+                - 10.120.0.0/20 
+            controlPlaneRef:
+              apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+              kind: AWSManagedControlPlane
+              name: (( .params.CLUSTER_NAME ))-control-plane
+            infrastructureRef:
+              apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+              kind: AWSManagedControlPlane
+              name: (( .params.CLUSTER_NAME ))-control-plane
+          
+        - apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+          kind: AWSManagedControlPlane
+          metadata:
+            name: (( .params.CLUSTER_NAME ))-control-plane
+            namespace: default
+          spec:
+            # bastion:
+            #   enabled: true
+            addons:
+            - conflictResolution: overwrite
+              name: vpc-cni
+              version: v1.12.6-eksbuild.2
+            additionalTags: 
+              creator: ${awsTagCreator}
+              customer: ${awsTagCustomer}
+              projectGid: \"${awsTagProjectGid}\"
+            region: (( .params.AWS_REGION ))
+            sshKeyName: ${awsKeyPairName}
+            version: (( .params.KUBERNETES_VERSION ))
+            eksClusterName: (( .params.CLUSTER_NAME ))
+          
+        - apiVersion: cluster.x-k8s.io/v1beta1
+          kind: MachinePool
+          metadata:
+            name: (( .params.CLUSTER_NAME ))-pool-0
+            namespace: default
+          spec:
+            clusterName: (( .params.CLUSTER_NAME ))
+            replicas: (( .params.WORKER_MACHINE_COUNT ))
+            template:
+              spec:
+                bootstrap:
+                  dataSecretName: ""
+                clusterName: (( .params.CLUSTER_NAME ))
+                infrastructureRef:
+                  apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+                  kind: AWSManagedMachinePool
+                  name: (( .params.CLUSTER_NAME ))-pool-0
+          
+        - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: AWSManagedMachinePool
+          metadata:
+            name: (( .params.CLUSTER_NAME ))-pool-0
+            namespace: default
+          spec:
+            scaling:
+              minSize: 1
+              maxSize: 3
+            updateConfig:
+              maxUnavailable: 1
+            remoteAccess: 
+              public: true

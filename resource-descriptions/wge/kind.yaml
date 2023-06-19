@@ -1,0 +1,30 @@
+apps:
+  - name: podinfo-ms3
+    mode: local-folders
+    version: 6.3.6
+    clusterLabels:
+      - multipass
+      - dell
+  - name: podinfo-ms2
+    mode: apps-repos
+    path: ./kustomize
+    clusterLabels:
+      - multipass
+  - name: podinfo-ms1
+    mode: apps-repos
+    ref:
+      type: tag
+      value: v6.3.6
+    path: ./kustomize
+    clusterLabels:
+      - multipass
+  - name: podinfo-ms4
+    mode: apps-params
+    params: ./resource-descriptions/test-two/podinfo-ms4.yaml
+    clusterLabels:
+      - dell
+  - name: podinfo-msX
+    mode: local-folders
+    version: 6.3.6
+    clusterLabels:
+      - not-clusters

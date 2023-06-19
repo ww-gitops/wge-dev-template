@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${templateNamespace}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: wge
+  namespace: ${templateNamespace}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wge-token
+  namespace: ${templateNamespace}
+  labels:
+    weave.works/wge-sa: wge
+  annotations:
+    kubernetes.io/service-account.name: wge
+type: kubernetes.io/service-account-token

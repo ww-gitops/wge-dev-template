@@ -62,3 +62,5 @@ namespaces:
           memory: "100Mi"
 
   - name: test-two
+  - name: kind
+

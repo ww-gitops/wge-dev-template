@@ -84,7 +84,25 @@ echo "Waiting for ingress controller to start"
 kubectl wait --timeout=2m --for=condition=Ready kustomizations.kustomize.toolkit.fluxcd.io -n flux-system nginx
 
 export CLUSTER_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.clusterIP}')
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+export AWS_ACCOUNT_ID="none"
+if [ "$aws" == "true" ]; then
+  export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+fi
+
+if [ "$aws" == "true" ]; then
+  cp resources/aws/flux/* cluster/flux
+  cp resources/aws/templates/* cluster/templates
+  git add cluster/flux
+  git add cluster/templates
+fi
+
+if [ "$capi" == "true" ]; then
+  cp resources/capi/flux/* cluster/flux
+  cp resources/capi/namespace/* cluster/namespace
+  git add cluster/flux
+  git add cluster/namespace
+fi
+
 export namespace=flux-system
 cat resources/cluster-config.yaml | envsubst > cluster/config/cluster-config.yaml
 export namespace=\$\{nameSpace\}
@@ -106,9 +124,10 @@ while ( true ); do
   if [ "$started" == "true" ]; then
     break
   fi
-  sleep 1
+  sleep 5
 done
 
+sleep 5
 # Initialize vault
 vault-init.sh
 vault-unseal.sh
@@ -127,6 +146,19 @@ set +e
 vault-secrets-config.sh
 set -e
 
+if [ "$aws_capi" == "true" ]; then
+  clusterawsadm bootstrap iam create-cloudformation-stack --config resources/clusterawsadm.yaml --region $AWS_REGION
+
+  export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
+
+  export EXP_EKS=true
+  export EXP_MACHINE_POOL=true
+  export CAPA_EKS_IAM=true
+  export EXP_CLUSTER_RESOURCE_SET=true
+
+  clusterctl init --infrastructure aws
+fi
+
 secrets.sh --tls-skip --wge-entitlement $PWD/resources/wge-entitlement.yaml --secrets $PWD/resources/github-secrets.sh
 
 # Wait for dex to start
@@ -135,3 +167,10 @@ kubectl wait --timeout=5m --for=condition=Ready kustomization/dex -n flux-system
 set +e
 vault-oidc-config.sh
 set -e
+
+if [ "$aws" == "true" ]; then
+  echo "Waiting for aws to be applied"
+  kubectl wait --timeout=5m --for=condition=Ready kustomization/aws -n flux-system
+
+  terraform/bin/tf-apply.sh aws-key-pair
+fi

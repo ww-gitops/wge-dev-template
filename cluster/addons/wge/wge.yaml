@@ -32,7 +32,19 @@ spec:
   interval: 1m0s
   timeout: 5m
   values:
+    clusterBootstrapController:
+      enabled: true
+
+    # Uses the query service for Applications and Sources views
+    useQueryServiceBackend: false
+    # explorer:
+    #   collector:
+    #     # ServiceAccount that explorer will use to watch clusters for resources
+    #     serviceAccount:
+    #       name: "collector"
+    #       namespace: "flux-system"
     enableExplorer: true
+
     ingress:
       enabled: true
       annotations:
@@ -48,11 +60,20 @@ spec:
           - path: /?(.*)
             pathType: ImplementationSpecific
     config:
+      logLevel: info
       git:
         type: github
         hostname: github.com
       capi:
+        templates:
+          namespace: default
+          injectPruneAnnotation: enabled
+          addBasesKustomization: enabled
+        clusters:
+          namespace: "default"
         repositoryURL: https://github.com/${GitHubOrg}/${GitHubRepo}
+        repositoryPath: "./clusters/management/clusters"
+        repositoryClustersPath: "./clusters"
       oidc:
         enabled: true
         issuerURL: https://dex.${dnsSuffix}
@@ -69,8 +90,25 @@ spec:
       enabled: false
     enablePipelines: true
     enableTerraformUI: true
+    listOCIRepositories: true
+    enableRunUI: true
+
+    # templates-controller:
+    #   enabled: false
     global:
-      capiEnabled: false
+      capiEnabled: ${capi}
+    #### Metrics - Prometheus metrics configuration
+    metrics:
+      # Enables metrics generation and prometheus endpoint
+      enabled: false
+      service:
+        # -- Port to start the metrics exporter on
+        port: 8080
+        # -- Annotations to set on the service
+        annotations:
+          prometheus.io/scrape: "false"
+          prometheus.io/path: "/metrics"
+          prometheus.io/port: "8080"
   postRenderers:
     - kustomize:
         patches:

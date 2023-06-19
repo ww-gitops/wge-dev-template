@@ -1,0 +1,74 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: wge-leaf-config
+  namespace: wge
+spec:
+  dependsOn:
+    - name: wge-sa
+      namespace: flux-system
+  interval: 10m0s
+  retryInterval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  path: ./leaf-clusters/wge-leaf-config
+  prune: true
+  timeout: 5m
+  wait: true
+  postBuild:
+    substitute:
+      clusterName: ${wge_cluster_name}
+      GitHubOrg: ${GITHUB_MGMT_ORG}
+      GitHubRepo: ${GITHUB_MGMT_REPO}
+      userEmail: ${USER_EMAIL}
+      commitUser: ${GITHUB_USER}
+      resourceName: kind
+      templateNamespace: wge
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: wge-leaf
+  namespace: wge
+spec:
+  prune: true
+  retryInterval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 5m
+  wait: true
+  dependsOn:
+  - name: wge-leaf-config
+  interval: 5m0s
+  path: ./leaf-clusters/wge-leaf
+  postBuild:
+    substituteFrom:
+    - kind: ConfigMap
+      name: cluster-config
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: wge-leaf-apps
+  namespace: wge
+spec:
+  prune: true
+  retryInterval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 5m
+  wait: true
+  dependsOn:
+  - name: wge-leaf
+  interval: 5m0s
+  path: ./leaf-clusters/wge-leaf-apps
+  postBuild:
+    substituteFrom:
+    - kind: ConfigMap
+      name: cluster-config

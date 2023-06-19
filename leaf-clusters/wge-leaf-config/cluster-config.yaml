@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-config
+  namespace: ${templateNamespace}
+data:
+  clusterType: "leaf"
+  clusterName: ${clusterName}
+  GitHubOrg: ${GitHubOrg}
+  GitHubRepo: ${GitHubRepo}
+  userEmail: ${userEmail}
+  commitUser: ${commitUser}
+  resourceName: ${resourceName}
+  templateNamespace: ${templateNamespace}
+  clusterPrefix: ${clusterPrefix}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-config
+  namespace: flux-system
+data:
+  clusterType: "leaf"
+  clusterName: ${clusterName}
+  GitHubOrg: ${GitHubOrg}
+  GitHubRepo: ${GitHubRepo}
+  userEmail: ${userEmail}
+  commitUser: ${commitUser}
+  resourceName: ${resourceName}
+  templateNamespace: ${templateNamespace}
+  clusterPrefix: ${clusterPrefix}

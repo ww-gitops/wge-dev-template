@@ -1,0 +1,28 @@
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSClusterStaticIdentity
+metadata:
+  name: capi-aws-creds
+  namespace: ${nameSpace}
+spec:
+  allowedNamespaces:
+    list:
+    - ${nameSpace}
+  secretRef: capi-aws-creds
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: capi-aws-creds
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: capi-aws-creds
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: capi-aws-creds

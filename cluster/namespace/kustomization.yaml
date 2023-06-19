@@ -6,7 +6,6 @@ metadata:
 resources:
 - alerts.yaml
 - cluster-config.yaml
-- dynamic-v1.yaml
 - git-source.yaml
 - gitopssets-role.yaml
 - kustomization.yaml

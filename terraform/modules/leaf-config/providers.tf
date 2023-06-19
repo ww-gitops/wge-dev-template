@@ -4,10 +4,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.33"
     }
-    github = {
-      source  = "integrations/github"
-      version = "~> 5.3"
-    }
     kubectl = {
       source  = "gavinbunney/kubectl"
       version = "~> 1.14"

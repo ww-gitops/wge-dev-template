@@ -9,6 +9,7 @@ data:
   mgmtClusterName: ${CLUSTER_NAME}
   dnsSuffix: kubernetes.docker.internal
   clusterIP: ${CLUSTER_IP}
+  scmType: github
   GitHubOrg: ${GITHUB_MGMT_ORG}
   GitHubRepo: ${GITHUB_MGMT_REPO}
   awsAccountId: ac-${AWS_ACCOUNT_ID}
@@ -20,3 +21,6 @@ data:
   userEmail: ${USER_EMAIL}
   vault_url: ${VAULT_ADDR}
   commitUser: ${GITHUB_USER}
+  awsKeyPairName: ${GITHUB_USER}
+  sshPubKey: ${SSH_PUB_KEY}
+  capi: ${capi}

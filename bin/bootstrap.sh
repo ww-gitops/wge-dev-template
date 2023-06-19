@@ -42,4 +42,4 @@ source .envrc
 
 
 flux --version
-flux bootstrap github --owner $GITHUB_MGMT_ORG --repository $GITHUB_MGMT_REPO --path cluster/flux # --cluster-domain=docker.internal
+flux bootstrap github --owner $GITHUB_MGMT_ORG --repository $GITHUB_MGMT_REPO --path cluster/flux

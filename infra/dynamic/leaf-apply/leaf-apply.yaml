@@ -1,0 +1,57 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: 'leaf-apply-${resourceName}-${clusterName}'
+  namespace: ${templateNamespace}
+spec:
+  interval: 10m
+  dependsOn:
+    - name: 'eks-config-${resourceName}-${clusterName}'
+  retryInterval: 20s
+  path: ./terraform/cluster-templates/leaf-apply-${scmType}
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  backendConfig:
+    customConfiguration: |
+      backend "s3" {
+        key            = "${mgmtClusterName}/${templateNamespace}/leaf-apply/${resourceName}/${clusterName}/terraform.tfstate"
+        bucket         = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+        region         = "${awsRegion}"
+        encrypt        = true
+        dynamodb_table = "${prefixName}-${awsAccountId}-${awsRegion}-tf-state"
+      }
+  vars:
+    - name: cluster_name
+      value: ${resourceName}-${clusterName}
+    - name: resource_name
+      value: ${resourceName}
+    - name: template_namespace
+      value: ${templateNamespace}
+    - name: target_path
+      value: 'clusters/${templateNamespace}/${resourceName}/${clusterName}'
+    - name: cluster_prefix
+      value: '${clusterPrefix}'
+  varsFrom:
+    - kind: ConfigMap
+      name: leaf-cluster-config
+      varsKeys:
+        - git_commit_author
+        - git_commit_email
+        - github_owner
+        - github_org
+        - repository_name
+    - kind: Secret
+      name: github-leaf-token
+      varsKeys:
+        - github_token
+    - kind: ConfigMap
+      name: cluster-config
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  runnerPodTemplate:
+    spec:
+      envFrom:
+      - secretRef:
+          name: aws-creds

@@ -30,6 +30,10 @@ spec:
         creator: ${awsTagCreator}
     - name: cluster_name
       value: ${resourceName}-${clusterName}
+    - name: resource_name
+      value: ${resourceName}
+    - name: template_namespace
+      value: ${templateNamespace}
     - name: region
       value: ${awsRegion}
     - name: target_path

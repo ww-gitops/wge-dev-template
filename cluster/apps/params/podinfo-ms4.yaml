@@ -1,5 +1,0 @@
-deployment:
-  image: ""
-
-service:
-  port: 1234

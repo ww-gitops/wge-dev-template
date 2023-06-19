@@ -90,11 +90,7 @@ module "leaf_config" {
   cluster_name           = var.cluster_name
   cluster_ca_certificate = data.aws_eks_cluster.this.certificate_authority[0].data
   cluster_endpoint       = data.aws_eks_cluster.this.endpoint
-  commit_author          = var.git_commit_author
-  commit_email           = var.git_commit_email
-  commit_message         = var.git_commit_message
-  repository_name        = var.repository_name
-  branch                 = var.branch
+  template_namespace     = var.template_namespace
 }
 
 module "flux_bootstrap" {

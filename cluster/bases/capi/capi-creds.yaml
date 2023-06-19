@@ -1,0 +1,65 @@
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSClusterStaticIdentity
+metadata:
+  name: capi-aws-creds
+  namespace: default
+spec:
+  allowedNamespaces:
+    list:
+    - default
+  secretRef: capi-aws-creds
+---
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: aws-creds
+  namespace: flux-system
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault
+  target:
+    name: aws-creds
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: aws-creds
+---
+
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: capa-manager-bootstrap-credentials
+  namespace: capa-system
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault
+  target:
+    name: capa-manager-bootstrap-credentials
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: capi-aws-default
+        decodingStrategy: Base64       
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: capi-aws-creds
+  namespace: default
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault
+  target:
+    name: capi-aws-creds
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: capi-aws-creds

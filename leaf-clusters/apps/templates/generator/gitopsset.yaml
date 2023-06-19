@@ -1,0 +1,46 @@
+apiVersion: templates.weave.works/v1alpha1
+kind: GitOpsSet
+metadata:
+  labels:
+    app.kubernetes.io/name: gitopsset
+    app.kubernetes.io/instance: gitopsset-sample
+    app.kubernetes.io/part-of: gitopssets-controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: gitopssets-controller
+  name: ${resourceName}-apps
+  namespace: ${templateNamespace}
+spec:
+  serviceAccountName: gitopssets
+  generators:
+    - gitRepository:
+        repositoryRef: flux-system
+        files:
+          - path: resource-descriptions/${templateNamespace}/${resourceName}.yaml
+  templates:
+    - repeat: '{ .clusters[?(@.name=="c1")].apps }' # '{ .clusters[?("${clusterPrefix}"@.name=="${clusterName}")].apps }'
+      content:
+        kind: Kustomization
+        apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+        metadata:
+          name: '${resourceName}-app-{{ .Repeat.name }}'
+          annotations:
+            templates.weave.works/create-request: ''
+        spec:
+          interval: 1m0s
+          sourceRef:
+            kind: GitRepository
+            name: flux-system
+            namespace: flux-system
+          path: ./leaf-clusters/apps/templates/{{ .Repeat.mode }}
+          prune: true
+          wait: true
+          timeout: 5m
+          postBuild:
+            substituteFrom:
+              - kind: ConfigMap
+                name: cluster-config
+            substitute:
+              appName: '{{ .Repeat.name }}'
+              appPath: '{{ getordefault .Repeat "path" "./" }}'
+              appVersion: '{{ getordefault .Repeat "version" "latest" }}'
+              appParams: '{{ getordefault .Repeat "params" "none" }}'

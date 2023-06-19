@@ -53,4 +53,4 @@ clusters:
           value: v6.3.6
       - name: podinfo-ms4
         mode: app-params
-        params: ./cluster/apps/params/podinfo-ms4.yaml
+        params: ./leaf-clusters/apps/params/podinfo-ms4.yaml

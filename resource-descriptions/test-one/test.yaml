@@ -8,29 +8,35 @@ aws:
   region: eu-west-1
 
 vpcs:
-    # if mode is 'discover' name can be the vpc id or vpc name if it has one
   - name: v1
-    # If mode is 'use' provide the resource name of the existing vpc as well as name
-    # resource: ""
-    # set to 'use' to use existing vpc previously created by this template or 'discover' for using existing vpc
+
+    # set to 'discover' for using existing vpc not created by this template
     mode: create
+
     # Following field only required if mode is create 
     cidr: 10.0.0.0/16
     publicsubnets: 3
     privatesubnets: 3
 
 clusters:
-    # if mode is 'discover' name should be the EKS cluster name
+    
   - name: c1
-    # If mode is 'use' provide the resource name of the existing cluster as well as name
-    # resource: ""
-    # set to 'use' to use existing cluster previously created by this template or 'discover' for using existing cluster
+    # set to the resource name of the eks cluster if using an existing eks cluster created by this template
+    # eks_resource: <resource name> 
+
+    # set to 'discover' for using existing eks cluster not created by this template
     mode: create
+
+    # If mode is 'discover' use the following fields - Not yet supported
     gui: true # set to false to skip adding it to the GUI
-    vpc_name: v1
-    # if using an existing vpc created by a previous template, provide resource name of vpc as well as name
-    # vpc_resource: ""
+    flux: true # set to false to skip adding it to flux
+
     # Following field only required if mode is create 
+    
+    # set to the resource name of the vpc if using an existing vpc created by this template
+    # vpc_resource: <resource name> 
+    vpc_name: v1
+
     version: 1.26
 
     apps:
@@ -47,4 +53,4 @@ clusters:
           value: v6.3.6
       - name: podinfo-ms4
         mode: app-params
-        params: ./cluster/apps/params/podinfo-ms4.yaml
+        params: ./leaf-clusters/apps/params/podinfo-ms4.yaml
