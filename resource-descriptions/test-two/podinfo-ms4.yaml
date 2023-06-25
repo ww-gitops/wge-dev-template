@@ -1,5 +1,0 @@
-deployment:
-  image: "pcarlton/podinfo:6.3.6"
-
-service:
-  port: 1234

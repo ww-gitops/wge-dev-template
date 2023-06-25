@@ -1,3 +1,0 @@
-region = "${awsRegion}"
-awsKeyPairName = "${awsKeyPairName}"
-sshPubKey = "${sshPubKey}"

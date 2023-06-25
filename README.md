@@ -39,4 +39,4 @@ Once Flux has deployed the WGE GUI you can login using the `wge-admin` user and 
 
 ## Destroy
 
-To destroy the WGE cluster run the `reset.sh` script. This will destroy the WGE cluster. On a MacBook you will also need to reset the Kubernetes cluster using the Docker Dashboard. On Linux it will delete the Kind cluster.
+To destroy the WGE cluster run the `reset.sh` script. This will destroy the WGE cluster.
