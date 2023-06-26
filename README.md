@@ -27,7 +27,7 @@ Once you have copied the contents of this repository into a new repository, you 
 
 If you are using a MacBook start or reset the Kubernetes cluster using the Docker Dashboard. If you are using Linux the `setup.sh` script will create a Kind cluster.
 
-Copy the `resources/github-secrets.sh.template` file to `resources/github-secrets.sh` and update the values for your GitHub organization.
+Copy the `resources/github-secrets.sh.sample` file to `resources/github-secrets.sh` and update the values for your GitHub organization.
 
 If you want to use OIDC to login to the WGE GUI you will need to configure your GitHub organization for OIDC and add the client keys to the `resources/github-secrets.sh` file. This is optional, the setup script will generate a random password for the `wge-admin` user and store it in the `resources/wge-admin-password.txt` file.
 
