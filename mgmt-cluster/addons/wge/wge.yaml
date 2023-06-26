@@ -109,6 +109,20 @@ spec:
           prometheus.io/scrape: "false"
           prometheus.io/path: "/metrics"
           prometheus.io/port: "8080"
+
+    gitopssets-controller:
+      enabled: true
+      # gitops-controller-manager etc
+      fullnameOverride: gitopssets
+      controllerManager:
+        args:
+          # - --health-probe-bind-address=:8081
+          # - --metrics-bind-address=127.0.0.1:8080
+          # - --leader-elect
+          - --enabled-generators=GitRepository,Cluster,List,APIClient,Matrix
+        manager:
+          image:
+            tag: v0.13.3
   postRenderers:
     - kustomize:
         patches:
