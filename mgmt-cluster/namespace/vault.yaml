@@ -1,0 +1,101 @@
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: vault-token
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault
+  target:
+    name: vault-token
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: ${nameSpace}-vault-token
+---
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault
+  namespace: ${nameSpace}
+spec:
+  provider:
+    vault:
+      server: http://vault.vault.svc.cluster.local:8200 # https://vault.${dnsSuffix} 
+      path: secrets
+      version: v2
+      auth:
+        tokenSecretRef:
+          name: "vault-token"
+          key: "vault_token"
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: aws-creds
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: aws-creds
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: aws-creds
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: github-repo-read-credentials
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: github-repo-read-credentials
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: github-repo-read-credentials
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: git-write-token
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: github-repo-write-token
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: github-repo-write-token
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: github-leaf-token
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: github-leaf-token
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: github-leaf-token

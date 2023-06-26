@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: arbitrary
+resources:
+- namespace.yaml
+- repository.yaml
+- release.yaml
+configMapGenerator:
+- name: local-ca
+  namespace: vault
+  files:
+  - ../../../resources/CA.cer
+  options:
+    disableNameSuffixHash: true

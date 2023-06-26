@@ -1,0 +1,84 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  chart:
+    spec:
+      chart: dex
+      version: 0.12.1
+      sourceRef:
+        kind: HelmRepository
+        name: dex
+  rollback:
+    cleanupOnFail: false
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: -1
+      remediateLastFailure: false
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: -1
+      remediateLastFailure: false
+  interval: 1m0s
+  timeout: 5m
+  values:
+    configSecret:
+      create: false
+      name: dex-config
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    imagePullSecrets:
+      - name: dockerconfigjson-github-com
+    ingress:
+      enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: local-ca-issuer
+        nginx.ingress.kubernetes.io/rewrite-target: /$1
+      tls:
+        - secretName: dex-tls
+          hosts:
+            - dex.${dnsSuffix}
+      hosts:
+        - host: dex.${dnsSuffix}
+          paths:
+          - path: /?(.*)
+            pathType: ImplementationSpecific
+  postRenderers:
+    - kustomize:
+        patches:
+        - target:
+            kind: Deployment
+            name: dex
+          patch: |-
+            - op: add
+              path: /spec/template/spec/hostAliases
+              value:
+                - ip: ${clusterIP}
+                  hostnames:
+                  - "dex.${dnsSuffix}"
+                  - "wge.${dnsSuffix}"
+                  - "vault.${dnsSuffix}"
+
+            - op: add
+              path: /spec/template/spec/volumes/-
+              value:
+                name: local-ca
+                configMap:
+                  name: local-ca
+
+            - op: add
+              path: /spec/template/spec/containers/0/volumeMounts/-
+              value:
+                name: local-ca
+                mountPath: /etc/ssl/certs/local-ca.pem
+                subPath: CA.cer
+                readOnly: false

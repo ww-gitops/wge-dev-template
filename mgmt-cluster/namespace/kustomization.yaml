@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: arbitrary
+resources:
+- alerts.yaml
+- cluster-config.yaml
+- git-source.yaml
+- gitopssets-role.yaml
+- kustomization.yaml
+- leaf-config.yaml
+- ns.yaml
+# - resource-limits.yaml
+# - resource-quota.yaml
+- tf-runner.yaml
+- vault.yaml
+configMapGenerator:
+- name: local-ca
+  namespace: ${nameSpace}
+  files:
+  - ../../resources/CA.cer
+  options:
+    disableNameSuffixHash: true

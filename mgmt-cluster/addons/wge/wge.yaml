@@ -1,0 +1,141 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: weave-gitops-enterprise-charts
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://charts.dev.wkp.weave.works/releases/charts-v3
+  secretRef:
+    name: weave-gitops-enterprise-credentials
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: weave-gitops-enterprise
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: mccp
+      sourceRef:
+        kind: HelmRepository
+        name: weave-gitops-enterprise-charts
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: -1
+  upgrade:
+    remediation:
+      retries: -1
+    crds: CreateReplace
+  interval: 1m0s
+  timeout: 5m
+  values:
+    clusterBootstrapController:
+      enabled: true
+
+    # Uses the query service for Applications and Sources views
+    useQueryServiceBackend: false
+    # explorer:
+    #   collector:
+    #     # ServiceAccount that explorer will use to watch clusters for resources
+    #     serviceAccount:
+    #       name: "collector"
+    #       namespace: "flux-system"
+    # enableExplorer: true
+
+    ingress:
+      enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: local-ca-issuer
+        nginx.ingress.kubernetes.io/rewrite-target: /$1
+      tls:
+        - secretName: wge-tls
+          hosts:
+            - wge.${dnsSuffix}
+      hosts:
+        - host: wge.${dnsSuffix}
+          paths:
+          - path: /?(.*)
+            pathType: ImplementationSpecific
+    config:
+      logLevel: info
+      git:
+        type: github
+        hostname: github.com
+      capi:
+        templates:
+          namespace: default
+          injectPruneAnnotation: enabled
+          addBasesKustomization: enabled
+        clusters:
+          namespace: "default"
+        repositoryURL: https://github.com/${GitHubOrg}/${GitHubRepo}
+        repositoryPath: "./clusters/management/clusters"
+        repositoryClustersPath: "./clusters"
+      oidc:
+        enabled: true
+        issuerURL: https://dex.${dnsSuffix}
+        redirectURL: https://wge.${dnsSuffix}/oauth2/callback
+        clientCredentialsSecret: wge-oidc-auth
+    policy-agent:
+      enabled: true
+      excludeNamespaces:
+        - flux-system
+        - kube-system
+      config:
+        clusterId: macbook
+    tls:
+      enabled: false
+    enablePipelines: true
+    enableTerraformUI: true
+    listOCIRepositories: true
+    enableRunUI: true
+
+    # templates-controller:
+    #   enabled: false
+    global:
+      capiEnabled: ${capi}
+    #### Metrics - Prometheus metrics configuration
+    metrics:
+      # Enables metrics generation and prometheus endpoint
+      enabled: false
+      service:
+        # -- Port to start the metrics exporter on
+        port: 8080
+        # -- Annotations to set on the service
+        annotations:
+          prometheus.io/scrape: "false"
+          prometheus.io/path: "/metrics"
+          prometheus.io/port: "8080"
+  postRenderers:
+    - kustomize:
+        patches:
+        - target:
+            kind: Deployment
+            name: weave-gitops-enterprise-mccp-cluster-service
+          patch: |-
+            - op: add
+              path: /spec/template/spec/hostAliases
+              value:
+                - ip: ${clusterIP}
+                  hostnames:
+                  - "dex.${dnsSuffix}"
+                  - "wge.${dnsSuffix}"
+
+            - op: add
+              path: /spec/template/spec/volumes/-
+              value:
+                name: local-ca
+                configMap:
+                  name: local-ca
+
+            - op: add
+              path: /spec/template/spec/containers/0/volumeMounts/-
+              value:
+                name: local-ca
+                mountPath: /etc/ssl/certs/local-ca.pem
+                subPath: CA.cer
+                readOnly: false
+

@@ -1,0 +1,8 @@
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+apiVersion: v1
+metadata:
+  name: dockerconfigjson-github-com
+  namespace: dex
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiIkKGVjaG8gcGF1bGNhcmx0b24td3c6Z2hwX1RXZlYxMFlscGdoZ1lkcVNRa0RDMzEzb2NqOGExcDA3cmk4UiB8IGJhc2U2NCkifX19
