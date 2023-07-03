@@ -7,7 +7,7 @@ metadata:
 data:
   clusterType: "macbook"
   mgmtClusterName: ${CLUSTER_NAME}
-  dnsSuffix: kubernetes.docker.internal
+  dnsSuffix: ${dnsSuffix}
   clusterIP: ${CLUSTER_IP}
   scmType: github
   GitHubOrg: ${GITHUB_MGMT_ORG}
@@ -15,7 +15,7 @@ data:
   globalGitHubOrg: ${GLOBAL_GITHUB_ORG}
   globalGitHubRepo: ${GLOBAL_GITHUB_REPO}
   globalGitHubBranch: ${GLOBAL_GITHUB_BRANCH}
-  awsAccountId: ac-${AWS_ACCOUNT_ID}
+  awsAccountId: "${AWS_ACCOUNT_ID}"
   prefixName: ${PREFIX_NAME}
   awsRegion: ${AWS_REGION}
   awsTagCreator: ${AWS_TAG_creator}
