@@ -10,3 +10,16 @@ spec:
   secretRef:
     name: github-repo-read-credentials
   url: https://github.com/${GitHubOrg}/${GitHubRepo}.git
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: global-config
+  namespace: ${nameSpace}
+spec:
+  interval: 1m0s
+  ref:
+    branch: ${globalGitHubBranch}
+  secretRef:
+    name: github-repo-read-credentials
+  url: https://github.com/${globalGitHubOrg}/${globalGitHubRepo}.git
