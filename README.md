@@ -11,6 +11,7 @@ On a MacBook it is designed to use the Docker Kubernetes deployed from Docker Da
 - [Flux](https://fluxcd.io/docs/installation/) (required by various scripts)
 - [vault cli](https://www.vaultproject.io/docs/install) (required by various scripts)
 - [jq](https://stedolan.github.io/jq/download/) (required by various scripts)
+- [yq](https://mikefarah.gitbook.io/yq/) (required by various scripts)
 - [openssl](https://www.openssl.org/source/) (required to generate cluster certificate)
 - [gitops](https://docs.gitops.weave.works/docs/next/installation/weave-gitops/#install-the-gitops-cli) (optional only required for GitOps CLI deployments)
 - [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/) (optional, only for Linux and local Kind deployments)
