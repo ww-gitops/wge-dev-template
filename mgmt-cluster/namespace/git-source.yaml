@@ -4,7 +4,7 @@ metadata:
   name: flux-system
   namespace: ${nameSpace}
 spec:
-  interval: 1m0s
+  interval: 10m0s
   ref:
     branch: main
   secretRef:
@@ -17,7 +17,7 @@ metadata:
   name: global-config
   namespace: ${nameSpace}
 spec:
-  interval: 1m0s
+  interval: 10m0s
   ref:
     branch: ${globalGitHubBranch}
   secretRef:
