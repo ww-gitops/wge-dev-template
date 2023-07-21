@@ -1,8 +1,8 @@
 # Template for deploying WGE Cluster
 
-This repository contains the template for deploying a WGE cluster. Copy the contents of this repository into a new repository and follow the instructions below to deploy a WGE cluster.
+This repository contains the template for deploying a WGE cluster. Use this repository template to create a new repository and follow the instructions below to deploy a WGE cluster.
 
-On a MacBook it is designed to use the Docker Kubernetes deployed from Docker Dashboard but can be used with any Kubernetes cluster. On Linux it will create a Kind cluster. However Kind should still be installed on MacBook to support CAPI creation of local leaf cluster.
+On a MacBook it is designed to use the Docker Kubernetes deployed from Docker Dashboard but can be used with any Kubernetes cluster. On Linux it will create a Kind cluster.
 
 ## Prerequisites
 
@@ -13,6 +13,9 @@ On a MacBook it is designed to use the Docker Kubernetes deployed from Docker Da
 - [jq](https://stedolan.github.io/jq/download/) (required by various scripts)
 - [yq](https://mikefarah.gitbook.io/yq/) (required by various scripts)
 - [openssl](https://www.openssl.org/source/) (required to generate cluster certificate)
+
+## Optional
+
 - [gitops](https://docs.gitops.weave.works/docs/next/installation/weave-gitops/#install-the-gitops-cli) (optional only required for GitOps CLI deployments)
 - [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/) (optional, only for Linux and local Kind deployments)
 - [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) (optional, only for AWS deployments)
@@ -21,10 +24,11 @@ On a MacBook it is designed to use the Docker Kubernetes deployed from Docker Da
 - [terraform](https://www.terraform.io/downloads.html) (optional, only for AWS deployments)
 - [direnv](https://direnv.net/docs/installation.html) (optional)
 - [multipass](https://multipass.run/) (optional, only for multipass deployments)
+- htpasswd - required for generating prometheus password, optional.
 
 ## Setup
 
-Once you have copied the contents of this repository into a new repository, you will need to update the `.envrc` file with the correct values for your environment.
+Once you have created your own repository using this template, you will need to update the `.envrc` file with the correct values for your environment.
 
 If you are using a MacBook start or reset the Kubernetes cluster using the Docker Dashboard. If you are using Linux the `setup.sh` script will create a Kind cluster.
 
