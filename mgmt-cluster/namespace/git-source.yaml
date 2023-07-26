@@ -23,3 +23,16 @@ spec:
   secretRef:
     name: github-repo-read-credentials
   url: https://github.com/${globalGitHubOrg}/${globalGitHubRepo}.git
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: clusters
+  namespace: ${nameSpace}
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: github-repo-read-credentials
+  url: https://github.com/ww-gitops/clusters.git
