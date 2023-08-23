@@ -34,6 +34,14 @@ If you are using a MacBook start or reset the Kubernetes cluster using the Docke
 
 Copy the `resources/github-secrets.sh.sample` file to `resources/github-secrets.sh` and update the values for your GitHub organization.
 
+In order to use the shared functions and global configuration, you will need to clone two additional repos alongside the repo you created from this template:
+
+```bash
+cd ../ && git clone https://github.com/ww-gitops/global-config && git clone https://github.com/ww-gitops/gitops-wge-utils
+```
+
+Once these are in place, the shared functions will be available on your `PATH`, via the `.envrc` file via `direnv`, once you CD into the directory
+
 If you want to use OIDC to login to the WGE GUI you will need to configure your GitHub organization for OIDC and add the client keys to the `resources/github-secrets.sh` file. This is optional, the setup script will generate a random password for the `wge-admin` user and store it in the `resources/wge-admin-password.txt` file.
 
 ## Deploy
