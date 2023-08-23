@@ -6,14 +6,13 @@ metadata:
   annotations:
     templates.weave.works/profiles-enabled: "false"
     templates.weave.works/kustomizations-enabled: "false"
-    templates.weave.works/credentials-enabled: "true"
     templates.weave.works/add-common-bases: "false"
     templates.weave.works/inject-prune-annotation: "true"
     templates.weave.works/delimiters: "((,))"
   labels:
     weave.works/template-type: cluster
 spec:
-  description: AWS EKS Development Cluster 
+  description: AWS EKS Development Cluster
   renderType: templating
   params:
     - name: CLUSTER_NAME
@@ -53,7 +52,7 @@ spec:
             clusterNetwork:
               pods:
                 cidrBlocks:
-                - 10.120.0.0/20 
+                - 10.120.0.0/20
             controlPlaneRef:
               apiVersion: controlplane.cluster.x-k8s.io/v1beta1
               kind: AWSManagedControlPlane
@@ -62,7 +61,7 @@ spec:
               apiVersion: controlplane.cluster.x-k8s.io/v1beta1
               kind: AWSManagedControlPlane
               name: (( .params.CLUSTER_NAME ))-control-plane
-          
+
         - apiVersion: controlplane.cluster.x-k8s.io/v1beta1
           kind: AWSManagedControlPlane
           metadata:
@@ -75,7 +74,7 @@ spec:
             - conflictResolution: overwrite
               name: vpc-cni
               version: v1.12.6-eksbuild.2
-            additionalTags: 
+            additionalTags:
               creator: ${awsTagCreator}
               customer: ${awsTagCustomer}
               projectGid: \"${awsTagProjectGid}\"
@@ -83,7 +82,7 @@ spec:
             sshKeyName: ${awsKeyPairName}
             version: (( .params.KUBERNETES_VERSION ))
             eksClusterName: (( .params.CLUSTER_NAME ))
-          
+
         - apiVersion: cluster.x-k8s.io/v1beta1
           kind: MachinePool
           metadata:
@@ -101,7 +100,7 @@ spec:
                   apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
                   kind: AWSManagedMachinePool
                   name: (( .params.CLUSTER_NAME ))-pool-0
-          
+
         - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
           kind: AWSManagedMachinePool
           metadata:
@@ -113,5 +112,5 @@ spec:
               maxSize: 3
             updateConfig:
               maxUnavailable: 1
-            remoteAccess: 
+            remoteAccess:
               public: true
