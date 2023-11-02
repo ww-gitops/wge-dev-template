@@ -99,3 +99,20 @@ spec:
   dataFrom:
     - extract:
         key: github-leaf-token
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: receiver-token
+  namespace: ${nameSpace}
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: SecretStore
+    name: vault
+  target:
+    name: receiver-token
+    creationPolicy: Owner
+  dataFrom:
+    - extract:
+        key: receiver-token
